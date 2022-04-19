@@ -8,78 +8,34 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.interpolate import interp1d
 from statsmodels.distributions.empirical_distribution import ECDF
-# example of a bimodal data sample
-from matplotlib import pyplot
-from numpy.random import normal
-from numpy import hstack
-from scipy import stats
-import scipy
-# from scipy.stats.sampling import NumericalInverseHermite
-from scipy.stats import norm, genexpon
-from scipy.special import ndtr
 
+# number of random variable && iteration
+num_x = 100
+num_y = 100
+iteration = 100
 
-# Make up some random data
-def normal_kernel(x):
-    return 1 / np.sqrt((2 * np.pi)) * np.exp(-0.5 * x ** 2)
-
-
-# olp:out loop run 100 times
-
-olp = 0
+# Set an empty list
 k = np.zeros([1, 100])
-# var2
-while olp < 100:
-    s = np.zeros([1, 100])  # save an empty list
-    i = 0
-    b = 0
-    while i < 100:
-        g = np.random.uniform(0, 10, 100)  # fist input
-        a = 0
-        b = 0
-        # do average and sort it
-        while a < 100:
-            b = b + g[a]
-            a = a + 1
-            # print(i)
-            c = b / 100
-            # print(c)
-            s[0, i] = c
+rv_x = np.zeros(num_x)
+rv_y = np.zeros([1, num_y])
 
-        i = i + 1
-    d = np.reshape(s, (100,))  # set the data to 1-dimension array
-    ecdf = ECDF(d)  # find ECDF
+# Initial value of x and y (uniform distribution)
+for i in range(num_y):
+    rv_x = np.random.uniform(0, 10, num_x)
+    rv_y[0, i] = np.mean(rv_x)
 
+#
+for num_iter in range(iteration):
+    d = np.reshape(rv_y, (num_y,))
+    ecdf = ECDF(d)
     inv_cdf = interp1d(ecdf.y, ecdf.x, bounds_error=False, assume_sorted=True)  # INV CDF
+    for i in range(num_y):
+        rv_idx = np.random.uniform(0, 1, num_x)  # determined number of new random variable
+        rv_x = inv_cdf(rv_idx)
+        print(rv_idx[np.where(rv_x == -np.inf)[0][0]])  # check the index of -inf from which one
+        rv_y[0, i] = np.mean(rv_x)
 
-    r = np.random.uniform(0, 1, 100)
-    ys = inv_cdf(r)
-    where_are_inf = np.isinf(ys)
-    ys[where_are_inf] = 0
-    print(ys)
-
-    k[0, olp] = np.sum(ys) / 100;
-    olp = olp + 1;
-    ys = 0;
-
-fin_val = np.reshape(k, (100,))
-ecdf = ECDF(fin_val);
-inv_cdf = interp1d(ecdf.y, ecdf.x, bounds_error=False, assume_sorted=True)
-
-fin_r = np.random.uniform(0, 1, 100)
-fin_ys = inv_cdf(fin_r)
-where_are_inf = np.isinf(fin_ys)
-fin_ys[where_are_inf] = 5
-# print(fin_ys)
-plt.hist(fin_ys, 25)  # histtype='step', color='blue', linewidth=1);
+plt.hist(rv_y, 25)
 plt.show()
-pdf = 0
-total_fin_ys = [i for i in range(0, 10, 1)]
-total_pdf = []
-for x in total_fin_ys:
-    for i in fin_ys:
-        pdf += normal_kernel(x - i)
-    pdf = pdf / len(fin_ys)
-    total_pdf.append(pdf)
-plt.plot(total_fin_ys, total_pdf)
-plt.show()
+
+
